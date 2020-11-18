@@ -1,0 +1,163 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Trakt Lists</title>
+</head>
+<body>
+<!-- ReSharper disable UnknownCssClass -->
+<div id="ConfigurationPage" data-role="page" class="page type-interior pluginConfigurationPage ConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+    <div data-role="content">
+        <div class="content-primary">
+
+            <h1>Kill Script Setup</h1>
+
+            <form id="ConfigurationForm">
+                <div id="Allow4KAudioTranscodeDiv"></div>
+                <div id="Allow4KVideoTranscodeDiv"></div>
+                <div id="NagTranscodeDiv"></div>
+                <div id="PausedDurationMinDiv"></div>
+                <div>
+                    <button is="emby-button" type="submit" class="raised button-submit block"><span>${ButtonSave}</span></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ReSharper disable UseOfImplicitGlobalInFunctionScope -->
+    <script type="text/javascript">       
+
+        Array.prototype.remove = function () {
+            var what, a = arguments, L = a.length, ax;
+            while (L && this.length) {
+                what = a[--L];
+                while ((ax = this.indexOf(what)) !== -1) {
+                    this.splice(ax, 1);
+                }
+            }
+            return this;
+        };        
+
+        var ConfigurationPage =
+            {
+                pluginUniqueId: "1880798F-1EB9-40B3-807A-D52F04DA9A88",
+                loadConfiguration: function (page) {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(ConfigurationPage.pluginUniqueId).then(function (config) {
+                        
+                        var html = "";
+                        var checked = "";
+                        var value = false;
+                        if(config.Allow4KVideoTranscode)
+                        {
+                            checked = "checked";
+                            value = true;
+                        }
+                        html += '<div class="checkboxContainer checkboxContainer-withDescription">' +
+                            '                    <label>' +
+                            '                        <input is="emby-checkbox" type="checkbox" id="Allow4KVideoTranscode" '+ checked+' value="' + value + '" />' +
+                            '                        <span>Allow 4K Video TransCode </span>' +
+                            '                    </label>' +
+                            '                </div>'
+
+                        $('#Allow4KVideoTranscodeDiv').html(html);
+
+                        html = "";
+                        checked = "";
+                        value = false    
+                        if(config.Allow4KAudioTranscode)
+                        {
+                            checked = "checked";
+                            value = true;
+                            
+                        }
+                        html += '<div class="checkboxContainer checkboxContainer-withDescription">' +
+                            '                    <label>' +
+                            '                        <input is="emby-checkbox" type="checkbox" id="Allow4KAudioTranscode" '+ checked+' value="' + value + '" />' +
+                            '                        <span>Allow 4K Audio TransCode </span>' +
+                            '                    </label>' +
+                            '                </div>'
+
+                        $('#Allow4KAudioTranscodeDiv').html(html);
+
+                        html = "";
+                        checked = "";
+                        value = false
+                        if(config.NagTranscode)
+                        {
+                            checked = "checked";
+                            value = true;
+
+                        }
+                        html += '<div class="checkboxContainer checkboxContainer-withDescription">' +
+                            '                    <label>' +
+                            '                        <input is="emby-checkbox" type="checkbox" id="NagTranscode" '+ checked+' value="' + value + '" />' +
+                            '                        <span>Nag TransCodes </span>' +
+                            '                    </label>' +
+                            '                </div>'
+
+                        $('#NagTranscodeDiv').html(html);
+
+                        html = "";    
+                        value = 5
+                        if(config.PausedDurationMin)
+                        {
+                            value = config.PausedDurationMin;
+                        }
+                        html += '<div class="inputContainer">' +
+                            '                        <input is="emby-input" id="PausedDurationMin" value="' + value + '" label="Paused Duration Before Kill" />' +
+                            '                </div>'
+
+                        $('#PausedDurationMinDiv').html(html);
+
+                        $(":checkbox").click(function(){
+                            if($(this).is(':checked'))
+                            {
+                                $(this).val('true');
+                            }
+                            else
+                            {
+                                $(this).val('false');
+                            }
+                        });
+                        
+                        Dashboard.hideLoadingMsg();
+                    });
+                }
+            };
+
+        $('.ConfigurationPage').on('pageinit', function () {
+            Dashboard.showLoadingMsg();
+            var page = this;            
+            
+            $('#ConfigurationForm', page).on('submit', function () {
+                Dashboard.showLoadingMsg();
+
+                ApiClient.getPluginConfiguration(ConfigurationPage.pluginUniqueId).then(function (config) {
+                    config.Allow4KVideoTranscode = $('#AllowVideoTransCode', page).val();
+                    config.Allow4KAudioTranscode = $('#AllowAudioTransCode', page).val();
+                    config.NagTranscode = $('#NagTranscode', page).val();
+                    config.PausedDurationMin = $('#PausedDurationMin', page).val();
+
+                    ApiClient.updatePluginConfiguration(ConfigurationPage.pluginUniqueId, config).then(function (result) {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                        Dashboard.alert('Settings saved.');
+                    });
+                });
+                return false;
+            });
+        });
+
+        $('.ConfigurationPage').on('pageshow', function () {
+            Dashboard.showLoadingMsg();
+            var page = this;
+            ConfigurationPage.loadConfiguration(page);
+        });
+
+        
+    </script>
+    <!-- ReSharper restore UseOfImplicitGlobalInFunctionScope -->
+
+</div>
+<!-- ReSharper restore UnknownCssClass -->
+</body>
+</html>
