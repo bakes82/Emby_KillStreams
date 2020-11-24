@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
+using MediaBrowser.Model.Configuration;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Session;
 using MediaBrowser.Model.Tasks;
@@ -34,15 +35,18 @@ namespace KillStreams
             Logger.Info($"Count of streams {SessionManager.Sessions.Count()}");
             foreach (var sessionManagerSession in SessionManager.Sessions)
             {
-                if (sessionManagerSession.PlayState.PlayMethod == PlayMethod.Transcode &&
-                    sessionManagerSession.NowPlayingItem?.Height == 2160 &&
-                    sessionManagerSession.NowPlayingItem?.Width == 3840)
+                if (sessionManagerSession.PlayState.PlayMethod == PlayMethod.Transcode && sessionManagerSession.NowPlayingItem != null)
                 {
+                    var mediaSourceItem =
+                        sessionManagerSession.FullNowPlayingItem.GetMediaSources(false, false, new LibraryOptions()).Single(x =>
+                            String.Equals(x.Id, sessionManagerSession.PlayState.MediaSourceId, StringComparison.CurrentCultureIgnoreCase));
+
+                    var is4K = mediaSourceItem != null && mediaSourceItem.VideoStream.DisplayTitle.ToLower().Contains("4k");
                     Logger.Info("Inside Kill 4k");
                     Logger.Info(
                         $"Device Id {sessionManagerSession.DeviceId} - UserName {sessionManagerSession.UserName} - ID {sessionManagerSession.Id}");
 
-                    if (!Plugin.Instance.PluginConfiguration.Allow4KAudioTranscode &&
+                    if (is4K && !Plugin.Instance.PluginConfiguration.Allow4KAudioTranscode &&
                         !Plugin.Instance.PluginConfiguration.Allow4KVideoTranscode)
                     {
                         await SessionManager.SendPlaystateCommand(null, sessionManagerSession.Id,
@@ -67,7 +71,7 @@ namespace KillStreams
                             new CancellationToken());
                     }
 
-                    if (Plugin.Instance.PluginConfiguration.Allow4KAudioTranscode &&
+                    if (is4K && Plugin.Instance.PluginConfiguration.Allow4KAudioTranscode &&
                         !sessionManagerSession.TranscodingInfo.IsAudioDirect &&
                         sessionManagerSession.TranscodingInfo.IsVideoDirect)
                     {
