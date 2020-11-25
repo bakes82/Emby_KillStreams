@@ -43,7 +43,7 @@
                 loadConfiguration: function (page) {
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(ConfigurationPage.pluginUniqueId).then(function (config) {
-                        
+                        console.log(config);
                         var html = "";
                         var checked = "";
                         var value = false;
@@ -133,8 +133,8 @@
                 Dashboard.showLoadingMsg();
 
                 ApiClient.getPluginConfiguration(ConfigurationPage.pluginUniqueId).then(function (config) {
-                    config.Allow4KVideoTranscode = $('#AllowVideoTransCode', page).val();
-                    config.Allow4KAudioTranscode = $('#AllowAudioTransCode', page).val();
+                    config.Allow4KVideoTranscode = $('#Allow4KVideoTranscode', page).val();
+                    config.Allow4KAudioTranscode = $('#Allow4KAudioTranscode', page).val();
                     config.NagTranscode = $('#NagTranscode', page).val();
                     config.PausedDurationMin = $('#PausedDurationMin', page).val();
 
