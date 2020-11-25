@@ -55,8 +55,8 @@ namespace KillStreams
                     Logger.Info(
                         $"Device Id {sessionManagerSession.DeviceId} - UserName {sessionManagerSession.UserName} - ID {sessionManagerSession.Id}");
 
-                    if (is4K && !Plugin.Instance.PluginConfiguration.Allow4KAudioTranscode &&
-                        !Plugin.Instance.PluginConfiguration.Allow4KVideoTranscode)
+                    if (is4K && (!Plugin.Instance.PluginConfiguration.Allow4KAudioTranscode ||
+                        !Plugin.Instance.PluginConfiguration.Allow4KVideoTranscode))
                     {
                         await SessionManager.SendPlaystateCommand(null, sessionManagerSession.Id,
                             new PlaystateRequest
