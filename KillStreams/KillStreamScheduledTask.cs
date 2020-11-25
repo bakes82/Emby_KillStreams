@@ -39,9 +39,18 @@ namespace KillStreams
                 {
                     var mediaSourceItem =
                         sessionManagerSession.FullNowPlayingItem.GetMediaSources(false, false, new LibraryOptions()).Single(x =>
-                            String.Equals(x.Id, sessionManagerSession.PlayState.MediaSourceId, StringComparison.CurrentCultureIgnoreCase));
+                            string.Equals(x.Id, sessionManagerSession.PlayState.MediaSourceId, StringComparison.CurrentCultureIgnoreCase));
 
-                    var is4K = mediaSourceItem != null && mediaSourceItem.VideoStream.DisplayTitle.ToLower().Contains("4k");
+                    var is4K = mediaSourceItem != null && mediaSourceItem.VideoStream.Height <= 2160 &&
+                               mediaSourceItem.VideoStream.Width <= 4096 &&
+                               mediaSourceItem.VideoStream.Height > 1080 &&
+                               mediaSourceItem.VideoStream.Width > 1920;
+
+                    if (!is4K)
+                    {
+                        is4K = mediaSourceItem != null && mediaSourceItem.VideoStream.DisplayTitle.ToLower().Contains("4k");
+                    }
+
                     Logger.Info("Inside Kill 4k");
                     Logger.Info(
                         $"Device Id {sessionManagerSession.DeviceId} - UserName {sessionManagerSession.UserName} - ID {sessionManagerSession.Id}");
