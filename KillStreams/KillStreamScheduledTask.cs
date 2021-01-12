@@ -38,16 +38,49 @@ namespace KillStreams
             foreach (var sessionManagerSession in SessionManager.Sessions)
             {
                 Logger.Info(
-                    $"Device Id {sessionManagerSession.DeviceId} - UserName {sessionManagerSession.UserName} - ID {sessionManagerSession.Id} PlayState Method {sessionManagerSession.PlayState?.PlayMethod} AudioDirect {sessionManagerSession.TranscodingInfo?.IsAudioDirect} Video Direct {sessionManagerSession.TranscodingInfo?.IsVideoDirect}");
+                    $"Device Id {sessionManagerSession.DeviceId} - UserName {sessionManagerSession.UserName} - ID {sessionManagerSession.Id} PlayState Method {sessionManagerSession.PlayState?.PlayMethod} AudioDirect {sessionManagerSession.TranscodingInfo?.IsAudioDirect} Video Direct {sessionManagerSession.TranscodingInfo?.IsVideoDirect} MediaSourceId {sessionManagerSession.PlayState?.MediaSourceId}");
                 if (sessionManagerSession.PlayState != null &&
                     sessionManagerSession.PlayState.PlayMethod == PlayMethod.Transcode &&
                     sessionManagerSession.NowPlayingItem != null)
                 {
                     var mediaSourceItem =
                         sessionManagerSession.FullNowPlayingItem.GetMediaSources(false, false, new LibraryOptions())
-                            .Single(x =>
+                            .SingleOrDefault(x =>
                                 string.Equals(x.Id, sessionManagerSession.PlayState.MediaSourceId,
-                                    StringComparison.CurrentCultureIgnoreCase));
+                                    StringComparison.OrdinalIgnoreCase));
+
+                    if (mediaSourceItem == null)
+                    {
+                        var sources = sessionManagerSession.FullNowPlayingItem.GetMediaSources(false, false,
+                            new LibraryOptions());
+                        
+                        Logger.Info($"Not found Id {sessionManagerSession.PlayState.MediaSourceId} in IDs ({string.Join(", ", sources.Select(x => x.Id))})");
+
+                        Logger.Info("Inside Kill Video Unknown");
+                        Logger.Info(
+                            $"Device Id {sessionManagerSession.DeviceId} - UserName {sessionManagerSession.UserName} - ID {sessionManagerSession.Id}");
+
+                        await SessionManager.SendPlaystateCommand(null, sessionManagerSession.Id,
+                            new PlaystateRequest
+                            {
+                                Command = PlaystateCommand.Stop,
+                                ControllingUserId = UserManager.Users
+                                    .FirstOrDefault(user => user.Policy.IsAdministrator)?.Id.ToString()
+                            }, new CancellationToken());
+
+                        var text = "Stream stopped because file has an unknown source not in database.  What do I do!?!?!  Send help.";
+
+                        await SessionManager.SendMessageCommand(null, sessionManagerSession.Id,
+                            new MessageCommand
+                            {
+                                Header = "Transcoding of Unknown file not found in sources",
+                                Text = prettyText(text)
+                                //TimeoutMs = 10000
+                            },
+                            new CancellationToken());
+                        return;
+                        
+                    }
 
                     Logger.Info(
                         $"Height {mediaSourceItem.VideoStream.Height} Width  {mediaSourceItem.VideoStream.Width}");
@@ -64,7 +97,7 @@ namespace KillStreams
                     {
                         Logger.Info("Inside Kill Video 4k");
                         Logger.Info(
-                            $"Device Id {sessionManagerSession.DeviceId} - UserName {sessionManagerSession.UserName} - ID {sessionManagerSession.Id}");
+                            $"Device Id {sessionManagerSession.DeviceId} - UserName {sessionManagerSession.UserName} - ID {sessionManagerSession.Id} - Supports Media Control {sessionManagerSession.Capabilities.SupportsMediaControl} - Supported Commands {string.Join(", ", sessionManagerSession.Capabilities.SupportedCommands)}");
 
                         await SessionManager.SendPlaystateCommand(null, sessionManagerSession.Id,
                             new PlaystateRequest
@@ -86,6 +119,10 @@ namespace KillStreams
                                 //TimeoutMs = 10000
                             },
                             new CancellationToken());
+                        
+                        SessionManager.ReportSessionEnded(sessionManagerSession.Id);
+
+                        return;
                     }
 
                     if (sessionManagerSession.TranscodingInfo != null && is4K &&
@@ -116,6 +153,8 @@ namespace KillStreams
                                 //TimeoutMs = 10000
                             },
                             new CancellationToken());
+
+                        return;
                     }
 
                     if (is4K && Plugin.Instance.PluginConfiguration.Allow4KAudioTranscode &&
@@ -139,6 +178,8 @@ namespace KillStreams
                                     //TimeoutMs = 10000
                                 },
                                 new CancellationToken());
+
+                        return;
                     }
                 }
 
@@ -161,6 +202,8 @@ namespace KillStreams
                             Text = prettyText(text)
                         },
                         new CancellationToken());
+
+                    return;
                 }
             }
 
