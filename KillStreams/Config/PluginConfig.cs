@@ -13,5 +13,6 @@ namespace KillStreams
         public bool Allow4KAudioTranscode { get; set; }
         public bool NagTranscode { get; set; }
         public short PausedDurationMin { get; set; }
+        public bool AllowUnknownTranscode { get; set; }
     }
 }

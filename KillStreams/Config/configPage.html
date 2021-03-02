@@ -15,6 +15,7 @@
                 <div id="Allow4KAudioTranscodeDiv"></div>
                 <div id="Allow4KVideoTranscodeDiv"></div>
                 <div id="NagTranscodeDiv"></div>
+                <div id="AllowUnknownTranscodeDiv"></div>
                 <div id="PausedDurationMinDiv"></div>
                 <div>
                     <button is="emby-button" type="submit" class="raised button-submit block"><span>${ButtonSave}</span></button>
@@ -82,6 +83,24 @@
                         html = "";
                         checked = "";
                         value = false
+                        if(config.AllowUnknownTranscode)
+                        {
+                            checked = "checked";
+                            value = true;
+
+                        }
+                        html += '<div class="checkboxContainer checkboxContainer-withDescription">' +
+                            '                    <label>' +
+                            '                        <input is="emby-checkbox" type="checkbox" id="AllowUnknownTranscode" '+ checked+' value="' + value + '" />' +
+                            '                        <span>Allow Unknown TransCodes </span>' +
+                            '                    </label>' +
+                            '                </div>'
+
+                        $('#AllowUnknownTranscodeDiv').html(html);
+
+                        html = "";
+                        checked = "";
+                        value = false
                         if(config.NagTranscode)
                         {
                             checked = "checked";
@@ -137,6 +156,7 @@
                     config.Allow4KAudioTranscode = $('#Allow4KAudioTranscode', page).val();
                     config.NagTranscode = $('#NagTranscode', page).val();
                     config.PausedDurationMin = $('#PausedDurationMin', page).val();
+                    config.AllowUnknownTranscode = $('#AllowUnknownTranscode', page).val();
 
                     ApiClient.updatePluginConfiguration(ConfigurationPage.pluginUniqueId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);

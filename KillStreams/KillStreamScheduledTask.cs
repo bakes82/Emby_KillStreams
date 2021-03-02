@@ -49,7 +49,7 @@ namespace KillStreams
                                 string.Equals(x.Id, sessionManagerSession.PlayState.MediaSourceId,
                                     StringComparison.OrdinalIgnoreCase));
 
-                    if (mediaSourceItem == null)
+                    if (mediaSourceItem == null && !Plugin.Instance.PluginConfiguration.AllowUnknownTranscode)
                     {
                         var sources = sessionManagerSession.FullNowPlayingItem.GetMediaSources(false, false,
                             new LibraryOptions());
@@ -78,8 +78,13 @@ namespace KillStreams
                                 //TimeoutMs = 10000
                             },
                             new CancellationToken());
-                        return;
                         
+                        continue;
+                    }
+
+                    if (mediaSourceItem == null && Plugin.Instance.PluginConfiguration.AllowUnknownTranscode)
+                    {
+                        continue;
                     }
 
                     Logger.Info(
@@ -122,7 +127,7 @@ namespace KillStreams
                         
                         SessionManager.ReportSessionEnded(sessionManagerSession.Id);
 
-                        return;
+                        continue;
                     }
 
                     if (sessionManagerSession.TranscodingInfo != null && is4K &&
@@ -154,7 +159,7 @@ namespace KillStreams
                             },
                             new CancellationToken());
 
-                        return;
+                        continue;
                     }
 
                     if (is4K && Plugin.Instance.PluginConfiguration.Allow4KAudioTranscode &&
@@ -179,7 +184,7 @@ namespace KillStreams
                                 },
                                 new CancellationToken());
 
-                        return;
+                        continue;
                     }
                 }
 
@@ -203,7 +208,7 @@ namespace KillStreams
                         },
                         new CancellationToken());
 
-                    return;
+                    continue;
                 }
             }
 
